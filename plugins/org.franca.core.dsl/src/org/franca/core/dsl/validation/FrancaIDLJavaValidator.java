@@ -403,7 +403,7 @@ public class FrancaIDLJavaValidator extends AbstractFrancaIDLJavaValidator
 				}
 			}
 			if (showError) {
-				error(what + " can only be referenced inside interface "
+				error("either "+what + " is not a public type or it can only be referenced inside interface "
 						+ target.getName() + " or derived interfaces",
 						referrer, referencingFeature, -1);
 			}
