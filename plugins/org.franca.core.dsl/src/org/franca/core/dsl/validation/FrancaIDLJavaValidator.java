@@ -60,33 +60,33 @@ import org.franca.core.franca.FrancaPackage;
 import com.google.inject.Inject;
 
 /**
- *  This Java class is an intermediate class in the hierarchy of 
- *  validators for Franca IDL. It is still here for historical reasons.
- *  
- *  Please implement new validation methods in FrancaIDLValidator.xtend.
+ * This Java class is an intermediate class in the hierarchy of validators for
+ * Franca IDL. It is still here for historical reasons.
+ * 
+ * Please implement new validation methods in FrancaIDLValidator.xtend.
  */
 public class FrancaIDLJavaValidator extends AbstractFrancaIDLJavaValidator
 		implements ValidationMessageReporter {
-	
+
 	@Inject
-	protected CyclicDependenciesValidator cyclicDependenciesValidator; 
-	
+	protected CyclicDependenciesValidator cyclicDependenciesValidator;
+
 	@Inject
 	protected IQualifiedNameProvider qnProvider;
 
 	/**
-	 * Call external validators (those have been installed via an
-	 * Eclipse extension point).
+	 * Call external validators (those have been installed via an Eclipse
+	 * extension point).
 	 */
 	@Check
 	public void checkExtensionValidators(FModel model) {
 		CheckMode mode = getCheckMode();
-		for (IFrancaExternalValidator validator : ValidatorRegistry.getValidatorMap().get(mode)) {
+		for (IFrancaExternalValidator validator : ValidatorRegistry
+				.getValidatorMap().get(mode)) {
 			validator.validateModel(model, getMessageAcceptor());
 		}
 	}
 
-	
 	@Check
 	public void checkTypeNamesUnique(FTypeCollection collection) {
 		ValidationHelpers.checkDuplicates(this, collection.getTypes(),
@@ -113,32 +113,28 @@ public class FrancaIDLJavaValidator extends AbstractFrancaIDLJavaValidator
 
 	@Check
 	public void checkStructHasElements(FStructType type) {
-		if (type.getBase()==null && type.getElements().isEmpty() &&
-				! type.isPolymorphic()) {
+		if (type.getBase() == null && type.getElements().isEmpty()
+				&& !type.isPolymorphic()) {
 			error("Non-polymorphic structs must have own or inherited elements",
-					type,
-					FrancaPackage.Literals.FMODEL_ELEMENT__NAME, -1);
+					type, FrancaPackage.Literals.FMODEL_ELEMENT__NAME, -1);
 		}
 	}
-	
+
 	@Check
 	public void checkUnionHasElements(FUnionType type) {
-		if (type.getBase()==null && type.getElements().isEmpty()) {
-			error("Union must have own or inherited elements",
-					type,
-					FrancaPackage.Literals.FMODEL_ELEMENT__NAME, -1);
-		}
-	}
-	
-	@Check
-	public void checkEnumerationHasEnumerators(FEnumerationType type) {
-		if (type.getEnumerators().isEmpty()) {
-			error("Enumeration must not be empty",
-					type,
+		if (type.getBase() == null && type.getElements().isEmpty()) {
+			error("Union must have own or inherited elements", type,
 					FrancaPackage.Literals.FMODEL_ELEMENT__NAME, -1);
 		}
 	}
 
+	@Check
+	public void checkEnumerationHasEnumerators(FEnumerationType type) {
+		if (type.getEnumerators().isEmpty()) {
+			error("Enumeration must not be empty", type,
+					FrancaPackage.Literals.FMODEL_ELEMENT__NAME, -1);
+		}
+	}
 
 	@Check
 	public void checkMethodFlags(FMethod method) {
@@ -162,17 +158,19 @@ public class FrancaIDLJavaValidator extends AbstractFrancaIDLJavaValidator
 				FrancaPackage.Literals.FMODEL_ELEMENT__NAME, "argument name");
 		ValidationHelpers.checkDuplicates(this, method.getOutArgs(),
 				FrancaPackage.Literals.FMODEL_ELEMENT__NAME, "argument name");
-		
+
 		// check if in- and out-arguments are pairwise different
 		Map<String, FArgument> inArgs = new HashMap<String, FArgument>();
-		for(FArgument a : method.getInArgs()) {
+		for (FArgument a : method.getInArgs()) {
 			inArgs.put(a.getName(), a);
 		}
-		for(FArgument a : method.getOutArgs()) {
+		for (FArgument a : method.getOutArgs()) {
 			String key = a.getName();
 			if (inArgs.containsKey(key)) {
-				String msg = "Duplicate argument name '" + key + "' used for in and out"; 
-				error(msg, inArgs.get(key), FrancaPackage.Literals.FMODEL_ELEMENT__NAME, -1);
+				String msg = "Duplicate argument name '" + key
+						+ "' used for in and out";
+				error(msg, inArgs.get(key),
+						FrancaPackage.Literals.FMODEL_ELEMENT__NAME, -1);
 				error(msg, a, FrancaPackage.Literals.FMODEL_ELEMENT__NAME, -1);
 			}
 		}
@@ -188,15 +186,15 @@ public class FrancaIDLJavaValidator extends AbstractFrancaIDLJavaValidator
 	public void checkConsistentInheritance(FInterface api) {
 		ValidationHelpers.checkDuplicates(this,
 				FrancaHelpers.getAllAttributes(api),
-				FrancaPackage.Literals.FMODEL_ELEMENT__NAME,
-				"attribute");
-		
+				FrancaPackage.Literals.FMODEL_ELEMENT__NAME, "attribute");
+
 		// methods and broadcasts will be checked by the OverloadingValidator
 
 		ValidationHelpers.checkDuplicates(this, FrancaHelpers.getAllTypes(api),
 				FrancaPackage.Literals.FMODEL_ELEMENT__NAME, "type");
 
-		ValidationHelpers.checkDuplicates(this, FrancaHelpers.getAllConstants(api),
+		ValidationHelpers.checkDuplicates(this,
+				FrancaHelpers.getAllConstants(api),
 				FrancaPackage.Literals.FMODEL_ELEMENT__NAME, "constant");
 
 		if (api.getContract() != null && FrancaHelpers.hasBaseContract(api)) {
@@ -205,7 +203,7 @@ public class FrancaIDLJavaValidator extends AbstractFrancaIDLJavaValidator
 					FrancaPackage.Literals.FINTERFACE__CONTRACT, -1);
 		}
 	}
-	
+
 	@Check
 	public void checkOverloadedMethods(FInterface api) {
 		OverloadingValidator.checkOverloadedMethods(this, api);
@@ -215,87 +213,94 @@ public class FrancaIDLJavaValidator extends AbstractFrancaIDLJavaValidator
 	public void checkOverloadedBroadcasts(FInterface api) {
 		OverloadingValidator.checkOverloadedBroadcasts(this, api);
 	}
-	
 
 	@Check
 	public void checkCyclicDependencies(FModel m) {
 		cyclicDependenciesValidator.check(this, m);
 	}
 
-	
 	/**
 	 * Check order of elements in an interface.
 	 * 
-	 * The contract should be at the end of the interface definition.
-	 * In Franca 0.9.0 and older, there was a fixed order of elements in the
-	 * interface. With 0.9.1 and later, the order can be changed, but the contract
-	 * has to be at the end of the interface.
+	 * The contract should be at the end of the interface definition. In Franca
+	 * 0.9.0 and older, there was a fixed order of elements in the interface.
+	 * With 0.9.1 and later, the order can be changed, but the contract has to
+	 * be at the end of the interface.
 	 * 
-	 * For backward compatibility reasons, we still allow constants and type definitions
-	 * after the contract, but will mark these as deprecated.
+	 * For backward compatibility reasons, we still allow constants and type
+	 * definitions after the contract, but will mark these as deprecated.
 	 * 
-	 *  @see https://code.google.com/a/eclipselabs.org/p/franca/issues/detail?id=104#c1
-	 * @param api the Franca interface
+	 * @see https
+	 *      ://code.google.com/a/eclipselabs.org/p/franca/issues/detail?id=104
+	 *      #c1
+	 * @param api
+	 *            the Franca interface
 	 */
 	@Check
 	public void checkElementOrder(FInterface api) {
-		if (api.getContract()!=null) {
+		if (api.getContract() != null) {
 			INode contractNode = NodeModelUtils.getNode(api.getContract());
-			if (contractNode==null)
+			if (contractNode == null)
 				return;
-			
+
 			int contractOffset = contractNode.getOffset();
-			
+
 			// check against all constant and type definitions
 			String msg = "Deprecated order of interface elements (contract should be at the end)";
-			for(FConstantDef i : api.getConstants()) {
+			for (FConstantDef i : api.getConstants()) {
 				INode node = NodeModelUtils.getNode(i);
-				if (node!=null) {
+				if (node != null) {
 					int offset = node.getOffset();
 					if (offset > contractOffset) {
-						warning(msg, api, FrancaPackage.Literals.FTYPE_COLLECTION__CONSTANTS, api.getConstants().indexOf(i));
+						warning(msg,
+								api,
+								FrancaPackage.Literals.FTYPE_COLLECTION__CONSTANTS,
+								api.getConstants().indexOf(i));
 					}
 				}
 			}
-			for(FType i : api.getTypes()) {
+			for (FType i : api.getTypes()) {
 				INode node = NodeModelUtils.getNode(i);
-				if (node!=null) {
+				if (node != null) {
 					int offset = node.getOffset();
 					if (offset > contractOffset) {
-						warning(msg, api, FrancaPackage.Literals.FTYPE_COLLECTION__TYPES, api.getTypes().indexOf(i));
+						warning(msg, api,
+								FrancaPackage.Literals.FTYPE_COLLECTION__TYPES,
+								api.getTypes().indexOf(i));
 					}
 				}
 			}
 		}
 	}
-	
 
 	// *****************************************************************************
 
 	// type-related checks
-	
+
 	@Check
-	public void checkConstantDef (FConstantDef constantDef) {
+	public void checkConstantDef(FConstantDef constantDef) {
 		TypesValidator.checkConstantType(this, constantDef);
 	}
 
 	@Check
-	public void checkDeclaration (FDeclaration declaration) {
+	public void checkDeclaration(FDeclaration declaration) {
 		TypesValidator.checkConstantType(this, declaration);
 	}
 
 	@Check
-	public void checkEnumValue (FEnumerator enumerator) {
+	public void checkEnumValue(FEnumerator enumerator) {
 		if (enumerator.getValue() != null)
 			TypesValidator.checkEnumValueType(this, enumerator);
 	}
 
 	@Check
-	public void checkIntegerInterval (FTypeRef intervalType) {
-		if (intervalType.getInterval()!=null) {
+	public void checkIntegerInterval(FTypeRef intervalType) {
+		if (intervalType.getInterval() != null) {
 			FIntegerInterval interval = intervalType.getInterval();
-			if (interval.getLowerBound()!=null && interval.getUpperBound()!=null) {
-				if (interval.getLowerBound().compareTo(interval.getUpperBound()) > 0) {
+			if (interval.getLowerBound() != null
+					&& interval.getUpperBound() != null) {
+				if (interval.getLowerBound()
+						.compareTo(interval.getUpperBound()) > 0) {
 					error("Invalid interval specification", intervalType,
 							FrancaPackage.Literals.FTYPE_REF__INTERVAL, -1);
 				}
@@ -303,7 +308,6 @@ public class FrancaIDLJavaValidator extends AbstractFrancaIDLJavaValidator
 		}
 	}
 
-	
 	// *****************************************************************************
 
 	@Check
@@ -326,7 +330,6 @@ public class FrancaIDLJavaValidator extends AbstractFrancaIDLJavaValidator
 		ContractValidator.checkGuard(this, guard);
 	}
 
-	
 	// visibility of derived types
 
 	@Check
@@ -334,24 +337,22 @@ public class FrancaIDLJavaValidator extends AbstractFrancaIDLJavaValidator
 		if (typeref.getDerived() != null) {
 			// this is a derived type, check if referenced type can be accessed
 			FType referencedType = typeref.getDerived();
-			checkDefinitionVisible(typeref, referencedType,
-					"Type " + referencedType.getName(),
-					FrancaPackage.Literals.FTYPE_REF__DERIVED
-			);
+			checkDefinitionVisible(typeref, referencedType, "Type "
+					+ referencedType.getName(),
+					FrancaPackage.Literals.FTYPE_REF__DERIVED);
 		}
 	}
-	
+
 	@Check
 	public void checkTypedElementRefVisible(FQualifiedElementRef qe) {
 		FEvaluableElement referenced = qe.getElement();
-		if (referenced!=null && referenced instanceof FTypedElement) {
-			checkDefinitionVisible(qe, referenced,
-					getTypeLabel(referenced) + " " + referenced.getName(),
-					FrancaPackage.Literals.FQUALIFIED_ELEMENT_REF__ELEMENT
-			);
+		if (referenced != null && referenced instanceof FTypedElement) {
+			checkDefinitionVisible(qe, referenced, getTypeLabel(referenced)
+					+ " " + referenced.getName(),
+					FrancaPackage.Literals.FQUALIFIED_ELEMENT_REF__ELEMENT);
 		}
 	}
-	
+
 	private String getTypeLabel(FEvaluableElement elem) {
 		if (elem instanceof FArgument) {
 			return "Argument";
@@ -370,37 +371,41 @@ public class FrancaIDLJavaValidator extends AbstractFrancaIDLJavaValidator
 			return "Model element";
 		}
 	}
-	
-	private void checkDefinitionVisible(
-			EObject referrer,
-			EObject referenced,
-			String what,
-			EReference referencingFeature
-	) {
+
+	private void checkDefinitionVisible(EObject referrer, EObject referenced,
+			String what, EReference referencingFeature) {
 		FInterface target = FrancaModelExtensions.getInterface(referenced);
 		if (target == null) {
-			// referenced element is defined by a type collection, can be accessed freely
+			// referenced element is defined by a type collection, can be
+			// accessed freely
 		} else {
-			// referenced element is defined by an FInterface, check if reference is allowed
-			// by local access (same FInterface) or from a base interface via inheritance
-			FInterface referrerInterface = FrancaModelExtensions.getInterface(referrer);
+			// referenced element is defined by an FInterface, check if
+			// reference is allowed
+			// by local access (same FInterface) or from a base interface via
+			// inheritance
+			FType type = (FType) referenced;
+			FInterface referrerInterface = FrancaModelExtensions
+					.getInterface(referrer);
 			boolean showError = false;
-			if (referrerInterface==null) {
-				// referrer is a type collection, it cannot reference a type from an interface
+			if (referrerInterface == null) {
+				// referrer is a type collection, it cannot reference a type
+				// from an interface
 				showError = true;
 			} else {
-				Set<FInterface> baseInterfaces =
-						FrancaModelExtensions.getInterfaceInheritationSet(referrerInterface);
-				if (! baseInterfaces.contains(target)) {
-					showError = true;
+				Set<FInterface> baseInterfaces = FrancaModelExtensions
+						.getInterfaceInheritationSet(referrerInterface);
+				if (!baseInterfaces.contains(target)) {
+					if (type.isPublic())
+						showError = false;
+					else {
+						showError = true;
+					}
 				}
 			}
 			if (showError) {
 				error(what + " can only be referenced inside interface "
-					+ target.getName() + " or derived interfaces",
-					referrer,
-					referencingFeature, -1
-				);
+						+ target.getName() + " or derived interfaces",
+						referrer, referencingFeature, -1);
 			}
 		}
 	}
@@ -408,9 +413,9 @@ public class FrancaIDLJavaValidator extends AbstractFrancaIDLJavaValidator
 	// *****************************************************************************
 
 	@Check
-	public void checkAnnotationType (FAnnotation annotation) {
+	public void checkAnnotationType(FAnnotation annotation) {
 		FAnnotationType type = annotation.getType();
-		if (type==null) {
+		if (type == null) {
 			error("Invalid annotation type", annotation,
 					FrancaPackage.Literals.FANNOTATION__RAW_TEXT, -1);
 		}
